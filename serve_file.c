@@ -17,14 +17,15 @@ const char* get_mime(const char* filename)
         const char* dot_ch;
         for(dot_ch = last; dot_ch >= filename; dot_ch--)
             if(*dot_ch == '.') break;
-        if(!strcmp(dot_ch, ".json"))    return "application/json";
-        if(!strcmp(dot_ch, ".js"))      return "application/javascript";
-        if(!strcmp(dot_ch, ".es"))      return "application/ecmascript";
-        if(!strcmp(dot_ch, ".xml"))     return "application/xml";
-        if(!strcmp(dot_ch, ".xhtml"))   return "application/xhtml+xml";
-        if(!strcmp(dot_ch, ".css"))     return "text/css";
-        if(!strcmp(dot_ch, ".html"))    return "text/html";
-        if(!strcmp(dot_ch, ".htm"))     return "text/html";
+        if(!strcmp(dot_ch, ".json"))    return "application/json; charset=utf-8";
+        if(!strcmp(dot_ch, ".js"))      return "application/javascript; charset=utf-8";
+        if(!strcmp(dot_ch, ".es"))      return "application/ecmascript; charset=utf-8";
+        if(!strcmp(dot_ch, ".xml"))     return "application/xml; charset=utf-8";
+        if(!strcmp(dot_ch, ".xhtml"))   return "application/xhtml+xml; charset=utf-8";
+        if(!strcmp(dot_ch, ".css"))     return "text/css; charset=utf-8";
+        if(!strcmp(dot_ch, ".html"))    return "text/html; charset=utf-8";
+        if(!strcmp(dot_ch, ".htm"))     return "text/html; charset=utf-8";
+        else return "text/plain; charset=utf-8";
     }
     return mime;
 }

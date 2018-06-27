@@ -1,6 +1,6 @@
 CC = gcc
 OPTIONS = -c -Wall -g
-LIBS = -lmagic
+LIBS = -lmagic -lpthread
 HEADERS = *.h
 RECEIPE = server.o server_util.o http.o serve_file.o
 TEST_RECEIPE = test.o server_util.o http.o serve_file.o

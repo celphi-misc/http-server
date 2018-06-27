@@ -1,15 +1,52 @@
 #include "server_util.h"
 #include "http.h"
+#include "pthread.h"
+
+int server_should_stop = 0;
+
+void *start_serve(void *client_sock)
+{
+    char recv_buf[4096];
+    int sock = *(int*)client_sock;
+    recv(sock, recv_buf, 4096, 0);
+    int status = get_response(recv_buf);
+    write(sock, get_buffer(), get_buffer_size());
+    close(sock);
+    printf("Server response %d\n", status);
+    pthread_exit(0);
+}
+
+void *start_accept(void *server_sock)
+{
+    while(!server_should_stop)
+    {
+        int client_sock = accept_client(*(int*)server_sock);
+        if(client_sock < 0)
+        {
+            printf("Accept Fault: %d\n", client_sock);
+            pthread_exit(0);
+        }
+
+        pthread_t  pid;
+        pthread_create(&pid, NULL, start_serve, &client_sock);
+        pthread_detach(pid);
+    }
+    pthread_exit(0);
+}
 
 int main(int argc, char** argv)
 {
-    int server_sock = new_socket(8080);
-    int client_sock = accept_client(server_sock);
-    char recv_buf[4096];
-    int read_size = recv(client_sock, recv_buf, 4096, 0);
-    puts(recv_buf);
-    get_response(recv_buf);
-    write(client_sock, get_buffer(), get_buffer_size());
-    puts(get_buffer());
+    const char* static_dir = "static";
+    int port = 4531;
+    if(argc >= 2)
+        static_dir = argv[1];
+    if(argc == 3)
+        sscanf(argv[2], "%d", &port);
+    set_static_path(static_dir);
+    int server_sock = new_socket(port);
+    pthread_t pid;
+    void *result;
+    pthread_create(&pid, NULL, start_accept, &server_sock);
+    pthread_join(pid, &result);
     return 0;
 }

@@ -4,6 +4,8 @@
 int size;
 // File buffer
 char buffer[MAX_FILE_BUFFER_SIZE];
+// Buffer mutex
+pthread_mutex_t buffer_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int get_url(char *dest, const char* req)
 {
@@ -86,21 +88,31 @@ int get_response(const char *req)
 {
     char url[2048];
     get_url(url, req);
+    if(!strcmp(url, "/")) strcpy(url, "/index.html");
+    printf("GET "); puts(url);
     char filename[4096];
     get_path(filename, url);
     int length = get_file_length(filename);
+
+    int status;
+    
+    // Critical section
+    pthread_mutex_lock(&buffer_mutex);
     if(length < 0) {
         // 404
         const char *response_str = "404 cannot GET";
         size = get_header(buffer, strlen(response_str), "text/plain", 404);
         strcpy(buffer + size, response_str);
         size += strlen(response_str);
-        return 404;
+        status = 404;
     } else {
         // 200
         const char *mime = get_mime(filename);
         size = get_header(buffer, length, mime, 200);
         size += write_file_to_buffer(buffer + size, filename);
-        return 200;
+        status = 200;
     }
+    pthread_mutex_unlock(&buffer_mutex);
+    
+    return status;
 }

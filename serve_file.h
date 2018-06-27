@@ -1,10 +1,9 @@
 #ifndef SERVE_FILE_CELPHI_H__
 #define SERVE_FILE_CELPHI_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "commons.h"
 #include <magic.h>
+#include <string.h>
 
 const char* get_mime(const char* filename);
 
