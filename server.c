@@ -38,11 +38,15 @@ int main(int argc, char** argv)
 {
     const char* static_dir = "static";
     int port = 4531;
+    const char* prefix = "";
     if(argc >= 2)
         static_dir = argv[1];
-    if(argc == 3)
+    if(argc >= 3)
         sscanf(argv[2], "%d", &port);
+    if(argc >= 4)
+        prefix = argv[3];
     set_static_path(static_dir);
+    set_prefix(prefix);
     int server_sock = new_socket(port);
     pthread_t pid;
     void *result;

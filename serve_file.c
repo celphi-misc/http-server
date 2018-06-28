@@ -4,6 +4,7 @@
 const char *static_path = "./static";
 
 // Get mime type
+#ifdef USING_MAGIC_MIME
 const char* get_mime(const char* filename)
 {
     // Consult magic
@@ -29,6 +30,34 @@ const char* get_mime(const char* filename)
     }
     return mime;
 }
+#else
+const char* get_mime(const char* filename)
+{
+    const char* last = filename + strlen(filename) - 1;
+    const char* dot_ch;
+    for(dot_ch = last; dot_ch >= filename; dot_ch--)
+        if(*dot_ch == '.') break;
+    if(!strcmp(dot_ch, ".json"))    return "application/json; charset=utf-8";
+    if(!strcmp(dot_ch, ".js"))      return "application/javascript; charset=utf-8";
+    if(!strcmp(dot_ch, ".es"))      return "application/ecmascript; charset=utf-8";
+    if(!strcmp(dot_ch, ".xml"))     return "application/xml; charset=utf-8";
+    if(!strcmp(dot_ch, ".xhtml"))   return "application/xhtml+xml; charset=utf-8";
+    if(!strcmp(dot_ch, ".pdf"))     return "application/pdf";
+    if(!strcmp(dot_ch, ".css"))     return "text/css; charset=utf-8";
+    if(!strcmp(dot_ch, ".html"))    return "text/html; charset=utf-8";
+    if(!strcmp(dot_ch, ".htm"))     return "text/html; charset=utf-8";
+    if(!strcmp(dot_ch, ".csv"))     return "text/csv; charset=utf-8";
+    if(!strcmp(dot_ch, ".jpg"))     return "image/jpeg";
+    if(!strcmp(dot_ch, ".jpeg"))    return "image/jpeg";
+    if(!strcmp(dot_ch, ".gif"))     return "image/gif";
+    if(!strcmp(dot_ch, ".tif"))     return "image/tiff";
+    if(!strcmp(dot_ch, ".tiff"))    return "image/tiff";
+    if(!strcmp(dot_ch, ".svg"))     return "image/svg";
+    if(!strcmp(dot_ch, ".ico"))     return "image/ico";
+
+    else return "text/plain; charset=utf-8";
+}
+#endif
 
 // Get file path by url
 int get_path(char* dest, const char* url)

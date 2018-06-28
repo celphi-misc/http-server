@@ -2,8 +2,11 @@
 #define SERVE_FILE_CELPHI_H__
 
 #include "commons.h"
-#include <magic.h>
 #include <string.h>
+
+#ifdef USING_MAGIC_MIME
+#include <magic.h>
+#endif
 
 const char* get_mime(const char* filename);
 

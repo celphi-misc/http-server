@@ -6,11 +6,15 @@ int size;
 char buffer[MAX_FILE_BUFFER_SIZE];
 // Buffer mutex
 pthread_mutex_t buffer_mutex = PTHREAD_MUTEX_INITIALIZER;
+// Prefix
+const char *prefix = "";
 
-int get_url(char *dest, const char* req)
+HttpMethod get_url(char *dest, const char* req)
 {
-    sscanf(req, "%*s %s %*s", dest);
-    return strlen(dest);
+    char method[10];
+    sscanf(req, "%s %s %*s", method, dest);
+    if(!strcmp(method, "POST")) return POST;
+    return GET;
 }
 
 const char* get_status(unsigned status)
@@ -84,11 +88,21 @@ const char* get_buffer()
 int get_buffer_size()
 { return size; }
 
-int get_response(const char *req)
+int set_prefix(const char* prefix_)
+{ prefix = prefix_; return 1; }
+
+const char* get_prefix()
+{ return prefix; }
+
+int handle_get(const char* temp_url)
 {
-    char url[2048];
-    get_url(url, req);
-    if(!strcmp(url, "/")) strcpy(url, "/index.html");
+    int response404 = 0;
+    const char* url = strstr(temp_url, prefix) + strlen(prefix);
+
+    // Response 404 if the file path is not the mapped location
+    if(url < temp_url) response404 = 1;
+    url = url > temp_url ? url : temp_url;
+    
     printf("GET "); puts(url);
     char filename[4096];
     get_path(filename, url);
@@ -98,10 +112,10 @@ int get_response(const char *req)
     
     // Critical section
     pthread_mutex_lock(&buffer_mutex);
-    if(length < 0) {
+    if(length < 0 || response404) {
         // 404
-        const char *response_str = "404 cannot GET";
-        size = get_header(buffer, strlen(response_str), "text/plain", 404);
+        const char *response_str = "<html><body>404 cannot GET</body></html>";
+        size = get_header(buffer, strlen(response_str), "text/html; charset=utf-8", 404);
         strcpy(buffer + size, response_str);
         size += strlen(response_str);
         status = 404;
@@ -115,4 +129,64 @@ int get_response(const char *req)
     pthread_mutex_unlock(&buffer_mutex);
     
     return status;
+}
+
+int handle_post(const char* temp_url, const char* body)
+{
+    int response404 = 0;
+    const char* url = strstr(temp_url, prefix) + strlen(prefix);
+
+    // Response 404 if the file path is not the mapped location
+    if(url < temp_url) response404 = 1;
+    url = url > temp_url ? url : temp_url;
+    
+    printf("POST "); puts(url);
+
+    int status;
+
+    // Critical section
+    pthread_mutex_lock(&buffer_mutex);
+    if(strcmp(url, "/dopost") || response404) {
+        // 404
+        const char *response_str = "<html><body>404 cannot POST</body></html>";
+        size = get_header(buffer, strlen(response_str), "text/html; charset=utf-8", 404);
+        strcpy(buffer + size, response_str);
+        size += strlen(response_str);
+        status = 404;
+    } else {
+        // 200
+        const char *success_str = "<html><body>User login succeeded</body></html>";
+        const char *failure_str = "<html><body>User login failed</body></html>";
+        const char *response_str;
+        puts(body);
+        if(strcmp(body, "login="LOGIN_STR"&pass="PASS_STR))
+            response_str = failure_str;
+        else response_str = success_str;
+        size = get_header(buffer, strlen(response_str), "text/html; charset=utf-8", 200);
+        strcpy(buffer + size, response_str);
+        size += strlen(response_str);
+        status = 200;
+    }
+    pthread_mutex_unlock(&buffer_mutex);
+    
+    return status;
+}
+
+int get_response(const char *req)
+{
+    char temp_url[2048];
+    
+    const char* body = get_body(req);
+
+    int method = get_url(temp_url, req);
+
+    if(method == GET)
+        return handle_get(temp_url);
+    else
+        return handle_post(temp_url, body);    
+}
+
+const char* get_body(const char* req)
+{
+    return strstr(req, "\r\n\r\n")+4;
 }

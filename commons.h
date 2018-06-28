@@ -21,4 +21,7 @@
 #define FAILED_CONNECTING       -4
 #define FAILED_SENDING          -5
 
+#define LOGIN_STR               "3150104531"
+#define PASS_STR                "4531"
+
 #endif
